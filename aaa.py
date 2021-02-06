@@ -2,11 +2,13 @@
 This is module for skyscrapers.py program
 """
 
-
 def read_input(path: str):
     """
     Read game board file from path.
     Return list of str.
+
+    >>> read_input("check.txt")
+    ['***21**', '452453*', '423145*', '*543215', '*35214*', '*41532*', '*2*1***']
     """
     file = open(path, 'r')
     return [line.strip() for line in file.readlines()]
@@ -31,11 +33,11 @@ def left_to_right_check(input_line, pivot):
     curr_visibility = 1
     max_visible_height = int(building_heights[0])
     for i in range(1, len(building_heights)):
-        if int(building_heights[i]) > max_visible_height:
+        if int(building_heights[i]) > int(building_heights[i - 1]) and \
+        int(building_heights[i]) > max_visible_height:
             curr_visibility += 1
-            max_visible_height = int(building_heights[i])
     return curr_visibility == pivot
-
+print(left_to_right_check("132354*", 3))
 
 def check_not_finished_board(board):
     """
@@ -72,16 +74,12 @@ def check_uniqueness_in_rows(board):
 '*553215', '*35214*', '*41532*', '*2*1***'])
     False
     """
-    heights = board[1:-1]
-    result = True
-    for row in heights:
-        row = row[1:-1]
-        high_set = set()
-        for tower in row:
-            if tower in high_set:
-                result = False
-            high_set.add(tower)
-    return result
+    for row in board:
+        heights = row[1:-1]
+        heights = heights.replace('*', '')
+        if len(set(heights)) != len(heights):
+            return False
+    return True
 
 
 def check_horizontal_visibility(board):
@@ -104,7 +102,7 @@ def check_horizontal_visibility(board):
     False
     """
     for row in board:
-        if row[0] == '*' or left_to_right_check(row, int(row[0])):
+        if row[0]=='*' or left_to_right_check(row, int(row[0])):
             right_to_left = row[::-1]
         else:
             return False
@@ -121,7 +119,9 @@ def check_columns(board):
     list -> bool
     Check column-wise compliance of the board for uniqueness (buildings of
     unique height) and visibility (top-bottom and vice versa).
-    Same as for horizontal cases, but aggregated in one function for vertical case, i.e. columns
+    Same as for horizontal cases, but aggregated in one function for vertical case, i.e. columns.
+    >>> check_columns(['***21**', '412453*', '423145*', '*543215', '*35214*', '*41532*', '*2*1***'])
+    True
     >>> check_columns(['***21**', '412453*', '423145*', '*543215', '*35214*', '*41232*', '*2*1***'])
     False
     >>> check_columns(['***21**', '412553*', '423145*', '*543215', '*35214*', '*41532*', '*2*1***'])
@@ -140,17 +140,25 @@ def check_columns(board):
     return check_horizontal_visibility(turned_board)
 
 
+
 def check_skyscrapers(input_path):
     """
     str -> bool
     Main function to check the status of skyscraper game board.
     Return True if the board status is compliant with the rules,
     False otherwise.
+
+    >>> check_skyscrapers("check.txt")
+    True
     """
     game_board = read_input(input_path)
     if not check_horizontal_visibility(game_board) or \
         not check_uniqueness_in_rows(game_board) or \
             not check_not_finished_board(game_board) or \
-        not check_columns(game_board):
-        return False
+                not check_columns(game_board):
+                return False
     return True
+
+
+if __name__ == "__main__":
+    print(check_skyscrapers("check.txt"))
